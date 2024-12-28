@@ -9,6 +9,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+var (
+	dirUp    = Point{x: 0, y: -1}
+	dirDown  = Point{x: 0, y: 1}
+	dirLeft  = Point{x: -1, y: 0}
+	dirRight = Point{x: 1, y: 0}
+)
+
 const (
 	gameSpeed    = time.Second / 6
 	screenWidth  = 640
@@ -27,6 +34,16 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		g.direction = dirUp
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		g.direction = dirDown
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		g.direction = dirRight
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		g.direction = dirLeft
+	}
+
 	if time.Since(g.lastUpdate) < gameSpeed {
 		return nil
 	}
