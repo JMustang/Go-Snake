@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/exp/rand"
 )
 
 var (
@@ -31,6 +32,7 @@ type Game struct {
 	snake      []Point
 	direction  Point
 	lastUpdate time.Time
+	food       Point
 }
 
 func (g *Game) Update() error {
@@ -61,10 +63,18 @@ func (g *Game) updateSnake(snake *[]Point, direction Point) {
 		y: head.y + direction.y,
 	}
 
-	*snake = append(
-		[]Point{newHead},
-		(*snake)[:len(*snake)-1]...,
-	)
+	if newHead == g.food {
+		*snake = append(
+			[]Point{newHead},
+			*snake...,
+		)
+		g.spawnFood()
+	} else {
+		*snake = append(
+			[]Point{newHead},
+			(*snake)[:len(*snake)-1]...,
+		)
+	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -79,6 +89,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			true,
 		)
 	}
+	vector.DrawFilledRect(
+		screen,
+		float32(g.food.x*gridSize),
+		float32(g.food.y*gridSize),
+		gridSize,
+		gridSize,
+		color.RGBA{255, 0, 0, 255},
+		true,
+	)
 }
 
 func (g *Game) Layout(
@@ -86,6 +105,13 @@ func (g *Game) Layout(
 	outsideHeight int,
 ) (int, int) {
 	return screenWidth, screenHeight
+}
+
+func (g *Game) spawnFood() {
+	g.food = Point{
+		rand.Intn(screenWidth / gridSize),
+		rand.Intn(screenHeight / gridSize),
+	}
 }
 
 func main() {
@@ -96,6 +122,8 @@ func main() {
 		}},
 		direction: Point{x: 1, y: 0},
 	}
+
+	g.spawnFood()
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Another Snake Game")
