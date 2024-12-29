@@ -72,6 +72,11 @@ func (g *Game) updateSnake(snake *[]Point, direction Point) {
 		y: head.y + direction.y,
 	}
 
+	if g.isBadColision(newHead, *snake) {
+		g.gameOver = true
+		return
+	}
+
 	if newHead == g.food {
 		*snake = append(
 			[]Point{newHead},
@@ -84,6 +89,23 @@ func (g *Game) updateSnake(snake *[]Point, direction Point) {
 			(*snake)[:len(*snake)-1]...,
 		)
 	}
+}
+
+func (g Game) isBadColision(
+	p Point,
+	snake []Point,
+) bool {
+	if p.x < 0 || p.y < 0 || p.x >= screenWidth/gridSize || p.y >= screenHeight/gridSize {
+		return true
+	}
+
+	for _, sp := range snake {
+		if sp == p {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -159,7 +181,6 @@ func main() {
 	mplusFaceSource = s
 
 	g := &Game{
-		gameOver: true,
 		snake: []Point{{
 			x: screenWidth / gridSize / 2,
 			y: screenHeight / gridSize / 2,
