@@ -1,20 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"image/color"
 	"log"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"golang.org/x/exp/rand"
 )
 
 var (
-	dirUp    = Point{x: 0, y: -1}
-	dirDown  = Point{x: 0, y: 1}
-	dirLeft  = Point{x: -1, y: 0}
-	dirRight = Point{x: 1, y: 0}
+	dirUp           = Point{x: 0, y: -1}
+	dirDown         = Point{x: 0, y: 1}
+	dirLeft         = Point{x: -1, y: 0}
+	dirRight        = Point{x: 1, y: 0}
+	mplusFaceSource *text.GoTextFaceSource
 )
 
 const (
@@ -33,9 +37,14 @@ type Game struct {
 	direction  Point
 	lastUpdate time.Time
 	food       Point
+	gameOver   bool
 }
 
 func (g *Game) Update() error {
+	if g.gameOver {
+		return nil
+	}
+
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		g.direction = dirUp
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
@@ -98,6 +107,29 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		color.RGBA{255, 0, 0, 255},
 		true,
 	)
+
+	if g.gameOver {
+		face := &text.GoTextFace{
+			Source: mplusFaceSource,
+			Size:   48,
+		}
+		t := "Game Over!"
+		w, h := text.Measure(
+			t,
+			face,
+			face.Size,
+		)
+		op := &text.DrawOptions{}
+		op.GeoM.Translate(screenWidth/2-w/2, screenHeight/2-h/2)
+		op.ColorScale.ScaleWithColor(color.White)
+		text.Draw(
+			screen,
+			t,
+			face,
+			op,
+		)
+	}
+
 }
 
 func (g *Game) Layout(
@@ -115,7 +147,19 @@ func (g *Game) spawnFood() {
 }
 
 func main() {
+
+	s, err := text.NewGoTextFaceSource(
+		bytes.NewReader(
+			fonts.MPlus1pRegular_ttf,
+		),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mplusFaceSource = s
+
 	g := &Game{
+		gameOver: true,
 		snake: []Point{{
 			x: screenWidth / gridSize / 2,
 			y: screenHeight / gridSize / 2,
